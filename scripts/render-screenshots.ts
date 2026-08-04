@@ -12,7 +12,11 @@ mkdirSync(outputDirectory, { recursive: true });
 // must let the npm development dependency resolve its own theme files.
 Reflect.deleteProperty(process.env, "PI_PACKAGE_DIR");
 
-const [{ getMarkdownTheme, initTheme }, { Markdown }, { installMarkdownPatch }] = await Promise.all([
+const [
+	{ getMarkdownTheme, initTheme },
+	{ Markdown },
+	{ installMarkdownPatch },
+] = await Promise.all([
 	import("@earendil-works/pi-coding-agent"),
 	import("@earendil-works/pi-tui"),
 	import("../src/markdown-patch.ts"),
@@ -45,7 +49,8 @@ func main() {
 - Safe plain-text fallback`;
 
 const patch = installMarkdownPatch();
-if (!patch.installed) throw new Error(patch.reason ?? "Could not install the Markdown patch");
+if (!patch.installed)
+	throw new Error(patch.reason ?? "Could not install the Markdown patch");
 
 interface AnsiStyle {
 	foreground?: string;
@@ -75,15 +80,23 @@ const BASIC_COLORS = [
 ] as const;
 
 function escapeHtml(text: string): string {
-	return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	return text
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;");
 }
 
 function color256(index: number): string {
 	if (index < 16) return BASIC_COLORS[index] ?? "inherit";
 	if (index < 232) {
 		const value = index - 16;
-		const channels = [Math.floor(value / 36), Math.floor((value % 36) / 6), value % 6];
-		const toChannel = (channel: number) => (channel === 0 ? 0 : 55 + channel * 40);
+		const channels = [
+			Math.floor(value / 36),
+			Math.floor((value % 36) / 6),
+			value % 6,
+		];
+		const toChannel = (channel: number) =>
+			channel === 0 ? 0 : 55 + channel * 40;
 		return `rgb(${channels.map(toChannel).join(", ")})`;
 	}
 	const gray = 8 + (index - 232) * 10;
@@ -91,7 +104,8 @@ function color256(index: number): string {
 }
 
 function resetStyle(style: AnsiStyle): void {
-	for (const key of Object.keys(style) as Array<keyof AnsiStyle>) Reflect.deleteProperty(style, key);
+	for (const key of Object.keys(style) as Array<keyof AnsiStyle>)
+		Reflect.deleteProperty(style, key);
 }
 
 function applyBasicStyle(style: AnsiStyle, code: number): boolean {
@@ -137,7 +151,10 @@ function paletteForeground(code: number): string | undefined {
 	return undefined;
 }
 
-function extendedForeground(parameters: number[], index: number): { color: string; consumed: number } | undefined {
+function extendedForeground(
+	parameters: number[],
+	index: number,
+): { color: string; consumed: number } | undefined {
 	if (parameters[index] !== 38) return undefined;
 	if (parameters[index + 1] === 2) {
 		const red = parameters[index + 2] ?? 0;
@@ -145,11 +162,16 @@ function extendedForeground(parameters: number[], index: number): { color: strin
 		const blue = parameters[index + 4] ?? 0;
 		return { color: `rgb(${red}, ${green}, ${blue})`, consumed: 4 };
 	}
-	if (parameters[index + 1] === 5) return { color: color256(parameters[index + 2] ?? 0), consumed: 2 };
+	if (parameters[index + 1] === 5)
+		return { color: color256(parameters[index + 2] ?? 0), consumed: 2 };
 	return undefined;
 }
 
-function applyForeground(style: AnsiStyle, parameters: number[], index: number): number {
+function applyForeground(
+	style: AnsiStyle,
+	parameters: number[],
+	index: number,
+): number {
 	const palette = paletteForeground(parameters[index] ?? 0);
 	if (palette) {
 		style.foreground = palette;
@@ -164,7 +186,8 @@ function applyForeground(style: AnsiStyle, parameters: number[], index: number):
 function updateStyle(style: AnsiStyle, parameters: number[]): void {
 	for (let index = 0; index < parameters.length; index++) {
 		const code = parameters[index] ?? 0;
-		if (!applyBasicStyle(style, code)) index += applyForeground(style, parameters, index);
+		if (!applyBasicStyle(style, code))
+			index += applyForeground(style, parameters, index);
 	}
 }
 
@@ -173,8 +196,12 @@ function styleAttribute(style: AnsiStyle): string {
 	if (style.foreground) rules.push(`color:${style.foreground}`);
 	if (style.bold) rules.push("font-weight:700");
 	if (style.italic) rules.push("font-style:italic");
-	const decorations = [style.underline ? "underline" : "", style.strike ? "line-through" : ""].filter(Boolean);
-	if (decorations.length > 0) rules.push(`text-decoration:${decorations.join(" ")}`);
+	const decorations = [
+		style.underline ? "underline" : "",
+		style.strike ? "line-through" : "",
+	].filter(Boolean);
+	if (decorations.length > 0)
+		rules.push(`text-decoration:${decorations.join(" ")}`);
 	return rules.join(";");
 }
 
@@ -189,7 +216,9 @@ function ansiToHtml(input: string): string {
 		const text = cleanInput.slice(cursor, index);
 		if (text) {
 			const attribute = styleAttribute(style);
-			output += attribute ? `<span style="${attribute}">${escapeHtml(text)}</span>` : escapeHtml(text);
+			output += attribute
+				? `<span style="${attribute}">${escapeHtml(text)}</span>`
+				: escapeHtml(text);
 		}
 		const parameters = (match[1] || "0").split(";").map(Number);
 		updateStyle(style, parameters);
@@ -198,7 +227,9 @@ function ansiToHtml(input: string): string {
 	const tail = cleanInput.slice(cursor);
 	if (tail) {
 		const attribute = styleAttribute(style);
-		output += attribute ? `<span style="${attribute}">${escapeHtml(tail)}</span>` : escapeHtml(tail);
+		output += attribute
+			? `<span style="${attribute}">${escapeHtml(tail)}</span>`
+			: escapeHtml(tail);
 	}
 	return output;
 }
@@ -302,7 +333,9 @@ function screenshotHtml(captureTheme: CaptureTheme, lines: string[]): string {
 </html>`;
 }
 
-const temporaryDirectory = mkdtempSync(join(tmpdir(), "pi-colours-screenshots-"));
+const temporaryDirectory = mkdtempSync(
+	join(tmpdir(), "pi-colours-screenshots-"),
+);
 try {
 	for (const captureTheme of CAPTURE_THEMES) {
 		initTheme(captureTheme.name);
@@ -312,7 +345,10 @@ try {
 		while (lines.at(-1) === "") lines.pop();
 
 		const htmlPath = join(temporaryDirectory, `${captureTheme.name}.html`);
-		const screenshotPath = join(outputDirectory, `pi-colours-${captureTheme.name}.png`);
+		const screenshotPath = join(
+			outputDirectory,
+			`pi-colours-${captureTheme.name}.png`,
+		);
 		writeFileSync(htmlPath, screenshotHtml(captureTheme, lines));
 		execFileSync(
 			"chromium",
