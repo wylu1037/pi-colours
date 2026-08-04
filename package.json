@@ -1,0 +1,68 @@
+{
+  "name": "pi-colours",
+  "version": "0.1.0",
+  "description": "Compact rich Markdown and active-theme syntax highlighting for Pi",
+  "type": "module",
+  "license": "MIT",
+  "author": "Kevin Pita",
+  "homepage": "https://github.com/kevinpita/pi-colours#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevinpita/pi-colours.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kevinpita/pi-colours/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi-coding-agent",
+    "syntax-highlighting",
+    "markdown",
+    "terminal",
+    "tui"
+  ],
+  "files": [
+    "extensions",
+    "src",
+    "docs/assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/pi-colours.ts"
+    ],
+    "image": "https://raw.githubusercontent.com/kevinpita/pi-colours/main/docs/assets/pi-colours-dark.png"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "screenshots": "vite-node scripts/render-screenshots.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run check && npm test"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.83.0",
+    "@earendil-works/pi-tui": "0.83.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "knip": {
+    "entry": [
+      "extensions/pi-colours.ts",
+      "scripts/render-screenshots.ts"
+    ]
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}
