@@ -4,8 +4,8 @@
 
 **Compact Markdown, copyable code frames, and active-theme syntax colors for [Pi](https://pi.dev).**
 
-[![npm version](https://img.shields.io/npm/v/pi-colours?color=cb3837)](https://www.npmjs.com/package/pi-colours)
-[![Pi package](https://img.shields.io/badge/pi-package-8abeb7)](https://pi.dev/packages/pi-colours)
+[![npm version](https://img.shields.io/npm/v/@wylu1037/pi-colours?color=cb3837)](https://www.npmjs.com/package/@wylu1037/pi-colours)
+[![Pi package](https://img.shields.io/badge/pi-package-8abeb7)](https://pi.dev/packages/@wylu1037/pi-colours)
 [![CI](https://github.com/wylu1037/pi-colours/actions/workflows/ci.yml/badge.svg)](https://github.com/wylu1037/pi-colours/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-5f87ff)](LICENSE)
 
@@ -32,7 +32,7 @@ The screenshots use the real Pi Markdown component, the active theme, and the sy
 Install from npm:
 
 ```bash
-pi install npm:pi-colours
+pi install npm:@wylu1037/pi-colours
 ```
 
 Or test the GitHub release without installation:
@@ -85,15 +85,15 @@ Press Enter or Esc to close it. Clicking a `[Copy]` chip inside the preview copi
 
 ## What changes
 
-| Output            | Pi Colours behavior                                                                           |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| Markdown headings | Uses compact `▌`, `▸`, `•`, and `·` markers.                                                  |
-| Fenced code       | Uses a rounded frame with a language label and a `[Copy]` chip instead of raw backticks.      |
-| Labeled code      | Supports aliases such as `ts`, `tsx`, `py`, `sh`, `yml`, `c++`, and `c#`.                     |
-| Unlabeled code    | Detects a language only when the code has a clear structure.                                  |
+| Output            | Pi Colours behavior                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Markdown headings | Uses compact `▌`, `▸`, `•`, and `·` markers.                                                   |
+| Fenced code       | Uses a rounded frame with a language label and a `[Copy]` chip instead of raw backticks.       |
+| Labeled code      | Supports aliases such as `ts`, `tsx`, `py`, `sh`, `yml`, `c++`, and `c#`.                      |
+| Unlabeled code    | Detects a language only when the code has a clear structure.                                   |
 | Bash results      | Frames source-like output and adds syntax colors when the command or output gives a safe hint. |
-| Copying           | Click `[Copy]`, press `ctrl+shift+c`, or run `/colours-copy`.                                 |
-| Normal text       | Keeps prose and normal command output plain.                                                  |
+| Copying           | Click `[Copy]`, press `ctrl+shift+c`, or run `/colours-copy`.                                  |
+| Normal text       | Keeps prose and normal command output plain.                                                   |
 
 Pi already gives syntax colors to `read` and `write` previews and semantic colors to diffs. Pi Colours keeps that behavior.
 

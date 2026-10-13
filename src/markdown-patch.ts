@@ -57,8 +57,7 @@ interface MarkdownInternals {
 	render: (width: number) => string[];
 	renderToken: RenderToken;
 	handleMouse?:
-		| ((event: TuiMouseEvent) => TuiMouseEventResult | undefined)
-		| undefined;
+		((event: TuiMouseEvent) => TuiMouseEventResult | undefined) | undefined;
 	[COPY_STATE]?: CopyState;
 }
 
@@ -163,7 +162,11 @@ function renderCodeBlock(
 ): string[] {
 	const code = token.text ?? "";
 	const resolution = resolveLanguage(code, token.lang);
-	const styledLines = highlightedCodeLines(component, code, resolution.language);
+	const styledLines = highlightedCodeLines(
+		component,
+		code,
+		resolution.language,
+	);
 	setLatestCopyTarget({ code, label: resolution.label });
 
 	const frame = buildCodeFrame(
@@ -202,8 +205,7 @@ function locateCopyTargets(
 			const stripped = stripAnsi(lines[row] ?? "");
 			const index = stripped.indexOf(block.borderText);
 			if (index < 0) continue;
-			const startX =
-				visibleWidth(stripped.slice(0, index)) + block.copy.startX;
+			const startX = visibleWidth(stripped.slice(0, index)) + block.copy.startX;
 			targets.push({
 				row,
 				startX,
@@ -319,8 +321,7 @@ export function installMarkdownPatch(
 	const restore = (): void => {
 		if (prototype.renderToken === patchedRenderToken)
 			prototype.renderToken = originalRenderToken;
-		if (prototype.render === patchedRender)
-			prototype.render = originalRender;
+		if (prototype.render === patchedRender) prototype.render = originalRender;
 		if (prototype.handleMouse === patchedHandleMouse) {
 			if (hadHandleMouse) prototype.handleMouse = originalHandleMouse;
 			else delete prototype.handleMouse;

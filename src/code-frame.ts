@@ -25,8 +25,7 @@ const TOP_SUFFIX = "─╮";
 const BOTTOM_SUFFIX = "╯";
 const SIDE = "│";
 
-const ANSI_PATTERN =
-	/\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))/g;
+const ANSI_PATTERN = /\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))/g;
 
 export function stripAnsi(text: string): string {
 	return text.replace(ANSI_PATTERN, "");
@@ -75,11 +74,14 @@ export function buildCodeFrame(
 	const innerWidth = width - 4;
 	const lines = [border(top)];
 	for (const contentLine of contentLines) {
-		for (const chunk of wrapTextWithAnsi(contentLine, Math.max(1, innerWidth))) {
-			const padding = " ".repeat(
-				Math.max(0, innerWidth - visibleWidth(chunk)),
+		for (const chunk of wrapTextWithAnsi(
+			contentLine,
+			Math.max(1, innerWidth),
+		)) {
+			const padding = " ".repeat(Math.max(0, innerWidth - visibleWidth(chunk)));
+			lines.push(
+				`${border(`${SIDE} `)}${chunk}${padding}${border(` ${SIDE}`)}`,
 			);
-			lines.push(`${border(`${SIDE} `)}${chunk}${padding}${border(` ${SIDE}`)}`);
 		}
 	}
 	lines.push(border(`╰${"─".repeat(width - 2)}${BOTTOM_SUFFIX}`));

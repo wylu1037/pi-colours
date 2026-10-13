@@ -240,7 +240,9 @@ export function registerHighlightedBashTool(
 			const elapsed = duration(state.startedAt, state.endedAt);
 			if (elapsed) {
 				const label = renderOptions.isPartial ? "Elapsed" : "Took";
-				notes.push(theme.fg("muted", `${label} ${Number(elapsed).toFixed(1)}s`));
+				notes.push(
+					theme.fg("muted", `${label} ${Number(elapsed).toFixed(1)}s`),
+				);
 			}
 			if (!output && notes.length === 0 && renderOptions.isPartial)
 				notes.push(theme.fg("muted", "Running..."));

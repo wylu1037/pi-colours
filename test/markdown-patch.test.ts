@@ -226,7 +226,10 @@ describe("Markdown patch", () => {
 		);
 		md.render(100);
 
-		expect(getLatestCopyTarget()).toEqual({ code: "print(2)", label: "python" });
+		expect(getLatestCopyTarget()).toEqual({
+			code: "print(2)",
+			label: "python",
+		});
 	});
 
 	it("restores the original renderer", () => {
