@@ -9,7 +9,7 @@ describe("buildCodeFrame", () => {
 		const lines = frame!.lines.map(stripAnsi);
 
 		expect(lines[0]).toBe(`╭─ bash ${"─".repeat(22)} [Copy] ─╮`);
-		expect(lines[1]).toBe(`│ echo hi${" ".repeat(29)} │`);
+		expect(lines[1]).toBe(`┃ echo hi${" ".repeat(29)} ┃`);
 		expect(lines[2]).toBe(`╰${"─".repeat(38)}╯`);
 		expect(frame!.copy).toEqual({ row: 0, startX: 31, endX: 36 });
 		expect(frame!.borderText).toBe(lines[0]);
@@ -33,7 +33,7 @@ describe("buildCodeFrame", () => {
 		const frame = buildCodeFrame("bash", ["中文测试"], 40);
 		const content = stripAnsi(frame!.lines[1]!);
 		expect(visibleWidth(content)).toBe(40);
-		expect(content).toBe(`│ 中文测试${" ".repeat(28)} │`);
+		expect(content).toBe(`┃ 中文测试${" ".repeat(28)} ┃`);
 	});
 
 	it("drops the copy chip when the frame is too narrow", () => {
@@ -56,6 +56,17 @@ describe("buildCodeFrame", () => {
 		);
 		expect(stripAnsi(frame!.lines[0]!)).toBe(frame!.borderText);
 		expect(visibleWidth(frame!.lines[0]!)).toBe(40);
+	});
+
+	it("renders the copied chip and keeps its geometry", () => {
+		const frame = buildCodeFrame("bash", ["echo hi"], 40, undefined, {
+			copied: true,
+		});
+		expect(frame).toBeDefined();
+		const lines = frame!.lines.map(stripAnsi);
+		expect(lines[0]).toBe(`╭─ bash ${"─".repeat(20)} [Copied] ─╮`);
+		expect(frame!.copy).toEqual({ row: 0, startX: 29, endX: 36 });
+		for (const line of frame!.lines) expect(visibleWidth(line)).toBe(40);
 	});
 
 	it("removes ANSI sequences", () => {
