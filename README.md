@@ -4,8 +4,8 @@
 
 **Compact Markdown, copyable code frames, and active-theme syntax colors for [Pi](https://pi.dev).**
 
-[![npm version](https://img.shields.io/npm/v/@wylu1037/pi-colours?color=cb3837)](https://www.npmjs.com/package/@wylu1037/pi-colours)
-[![Pi package](https://img.shields.io/badge/pi-package-8abeb7)](https://pi.dev/packages/@wylu1037/pi-colours)
+[![npm version](https://img.shields.io/npm/v/@wylu/pi-colours?color=cb3837)](https://www.npmjs.com/package/@wylu/pi-colours)
+[![Pi package](https://img.shields.io/badge/pi-package-8abeb7)](https://pi.dev/packages/@wylu/pi-colours)
 [![CI](https://github.com/wylu1037/pi-colours/actions/workflows/ci.yml/badge.svg)](https://github.com/wylu1037/pi-colours/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-5f87ff)](LICENSE)
 
@@ -32,7 +32,7 @@ The screenshots use the real Pi Markdown component, the active theme, and the sy
 Install from npm:
 
 ```bash
-pi install npm:@wylu1037/pi-colours
+pi install npm:@wylu/pi-colours
 ```
 
 Or test the GitHub release without installation:

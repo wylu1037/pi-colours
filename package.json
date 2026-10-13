@@ -1,5 +1,5 @@
 {
-  "name": "@wylu1037/pi-colours",
+  "name": "@wylu/pi-colours",
   "version": "0.2.0",
   "description": "Compact rich Markdown, copyable code frames, and active-theme syntax highlighting for Pi",
   "type": "module",
