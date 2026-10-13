@@ -38,7 +38,7 @@ pi install npm:@wylu/pi-colours
 Or test the GitHub release without installation:
 
 ```bash
-pi -e git:github.com/wylu1037/pi-colours@v0.2.0
+pi -e git:github.com/wylu1037/pi-colours@v0.1.0
 ```
 
 Restart Pi after installation. Use `/reload` after you change a local copy.
