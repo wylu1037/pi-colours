@@ -8,7 +8,6 @@ import {
 import { buildCodeFrame, stripAnsi } from "./code-frame.ts";
 import { setLatestCopyTarget } from "./copy.ts";
 import { resolveLanguage } from "./languages.ts";
-import { requestRepaint } from "./repaint.ts";
 
 interface InlineStyleContext {
 	applyText: (text: string) => string;
@@ -24,8 +23,6 @@ interface MarkdownToken {
 }
 
 interface RenderedCodeBlock {
-	/** Position of the block inside its Markdown document. */
-	index: number;
 	borderText: string;
 	copy?: { startX: number; endX: number } | undefined;
 	code: string;
@@ -33,7 +30,6 @@ interface RenderedCodeBlock {
 }
 
 interface CopyTarget {
-	index: number;
 	row: number;
 	startX: number;
 	endX: number;
@@ -46,14 +42,6 @@ interface CopyState {
 	targets: CopyTarget[];
 	lastText: string | undefined;
 	lastWidth: number | undefined;
-	/** Signature of the render pass the current targets were located in. */
-	signature: string | undefined;
-	/** Block that was copied most recently, and until when it shows "[Copied]". */
-	copiedIndex: number | undefined;
-	copiedUntil: number | undefined;
-	copyTimer: ReturnType<typeof setTimeout> | undefined;
-	/** Code block counter for the render pass in progress. */
-	blockIndex: number;
 }
 
 const COPY_STATE: unique symbol = Symbol("pi-colours:copy-state");
@@ -62,7 +50,6 @@ interface MarkdownInternals {
 	theme: MarkdownTheme;
 	text: string;
 	getStylePrefix?: (style: (text: string) => string) => string;
-	invalidate?: () => void;
 	renderInlineTokens: (
 		tokens: unknown[],
 		styleContext?: InlineStyleContext,
@@ -102,13 +89,10 @@ export interface MarkdownPatch {
 
 export interface MarkdownPatchOptions {
 	/** Called when the user activates the "[Copy]" label on a code frame. */
-	onCopy?: (code: string, label: string) => void | Promise<void>;
+	onCopy?: (code: string, label: string) => void;
 }
 
 const PATCH_KEY = Symbol.for("pi-colours:markdown-patch");
-
-/** How long the chip shows "[Copied]" after a successful copy. */
-const COPY_FEEDBACK_MS = 1200;
 
 function globalPatchState(): PatchState | undefined {
 	return (globalThis as typeof globalThis & { [PATCH_KEY]?: PatchState })[
@@ -170,43 +154,11 @@ function highlightedCodeLines(
 	return code.split("\n").map(component.theme.codeBlock);
 }
 
-function isCopiedBlock(state: CopyState, index: number): boolean {
-	return (
-		state.copiedIndex === index &&
-		state.copiedUntil !== undefined &&
-		Date.now() < state.copiedUntil
-	);
-}
-
-function repaintMarkdown(component: MarkdownInternals): void {
-	component.invalidate?.();
-	requestRepaint();
-}
-
-function markCopied(
-	component: MarkdownInternals,
-	state: CopyState,
-	index: number,
-): void {
-	state.copiedIndex = index;
-	state.copiedUntil = Date.now() + COPY_FEEDBACK_MS;
-	repaintMarkdown(component);
-	if (state.copyTimer !== undefined) clearTimeout(state.copyTimer);
-	state.copyTimer = setTimeout(() => {
-		state.copyTimer = undefined;
-		state.copiedIndex = undefined;
-		state.copiedUntil = undefined;
-		repaintMarkdown(component);
-	}, COPY_FEEDBACK_MS);
-}
-
 function renderCodeBlock(
 	component: MarkdownInternals,
 	token: MarkdownToken,
 	width: number,
 	nextTokenType: string | undefined,
-	index: number,
-	copied: boolean,
 ): string[] {
 	const code = token.text ?? "";
 	const resolution = resolveLanguage(code, token.lang);
@@ -222,11 +174,9 @@ function renderCodeBlock(
 		styledLines,
 		width,
 		component.theme.codeBlockBorder,
-		{ copied },
 	);
 	if (frame) {
 		component[COPY_STATE]?.recording.push({
-			index,
 			borderText: frame.borderText,
 			copy: frame.copy && { startX: frame.copy.startX, endX: frame.copy.endX },
 			code,
@@ -257,7 +207,6 @@ function locateCopyTargets(
 			if (index < 0) continue;
 			const startX = visibleWidth(stripped.slice(0, index)) + block.copy.startX;
 			targets.push({
-				index: block.index,
 				row,
 				startX,
 				endX: startX + (block.copy.endX - block.copy.startX),
@@ -302,18 +251,8 @@ export function installMarkdownPatch(
 	): string[] {
 		if (token.type === "heading")
 			return renderCompactHeading(this, token, nextTokenType);
-		if (token.type === "code") {
-			const state = this[COPY_STATE];
-			const index = state ? state.blockIndex++ : 0;
-			return renderCodeBlock(
-				this,
-				token,
-				width,
-				nextTokenType,
-				index,
-				state ? isCopiedBlock(state, index) : false,
-			);
-		}
+		if (token.type === "code")
+			return renderCodeBlock(this, token, width, nextTokenType);
 		return originalRenderToken.call(
 			this,
 			token,
@@ -334,23 +273,11 @@ export function installMarkdownPatch(
 				targets: [],
 				lastText: undefined,
 				lastWidth: undefined,
-				signature: undefined,
-				copiedIndex: undefined,
-				copiedUntil: undefined,
-				copyTimer: undefined,
-				blockIndex: 0,
 			});
 		state.recording = [];
-		state.blockIndex = 0;
 		const lines = originalRender.call(this, width);
-		const changed = state.lastText !== this.text || state.lastWidth !== width;
-		const signature = `${this.text}\u0000${width}\u0000${state.copiedIndex ?? -1}`;
-		if (
-			state.signature !== signature &&
-			(changed || state.recording.length > 0)
-		) {
+		if (state.lastText !== this.text || state.lastWidth !== width) {
 			state.targets = locateCopyTargets(state.recording, lines);
-			state.signature = signature;
 			state.lastText = this.text;
 			state.lastWidth = width;
 		}
@@ -379,12 +306,7 @@ export function installMarkdownPatch(
 				event.x <= target.endX,
 		);
 		if (!hit) return undefined;
-		if (event.type === "click") {
-			void Promise.resolve(onCopy(hit.code, hit.label)).then(
-				() => markCopied(this, state, hit.index),
-				() => {},
-			);
-		}
+		if (event.type === "click") onCopy(hit.code, hit.label);
 		return { handled: true };
 	};
 

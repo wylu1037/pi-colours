@@ -18,7 +18,6 @@ import {
 	getLatestCopyTarget,
 } from "../src/copy.ts";
 import { installMarkdownPatch } from "../src/markdown-patch.ts";
-import { installTuiCapture } from "../src/repaint.ts";
 
 export const PREVIEW_MARKDOWN = `# Compact rich Markdown
 
@@ -67,20 +66,18 @@ export default function piColours(pi: ExtensionAPI): void {
 		| ((message: string, type?: "info" | "warning" | "error") => void)
 		| undefined;
 
-	// Resolves once the text is on the clipboard, so code frames can confirm
-	// the copy; rejects after reporting the failure.
-	const copyCode = async (code: string, label: string): Promise<void> => {
-		try {
-			await copyToClipboard(code);
-			notify?.(
-				`Copied ${copyDescription(label, code)} to the clipboard`,
-				"info",
-			);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			notify?.(`Copy failed: ${message}`, "error");
-			throw error;
-		}
+	const copyCode = (code: string, label: string): void => {
+		copyToClipboard(code)
+			.then(() => {
+				notify?.(
+					`Copied ${copyDescription(label, code)} to the clipboard`,
+					"info",
+				);
+			})
+			.catch((error: unknown) => {
+				const message = error instanceof Error ? error.message : String(error);
+				notify?.(`Copy failed: ${message}`, "error");
+			});
 	};
 
 	const copyLatest = async (ctx: ExtensionContext): Promise<void> => {
@@ -101,7 +98,6 @@ export default function piColours(pi: ExtensionAPI): void {
 		}
 	};
 
-	const restoreTuiCapture = installTuiCapture();
 	const markdownPatch = installMarkdownPatch({ onCopy: copyCode });
 	registerHighlightedBashTool(pi, { onCopy: copyCode });
 
@@ -119,7 +115,6 @@ export default function piColours(pi: ExtensionAPI): void {
 
 	pi.on("session_shutdown", () => {
 		markdownPatch.restore();
-		restoreTuiCapture();
 		clearLatestCopyTarget();
 		notify = undefined;
 	});
