@@ -44,7 +44,7 @@ func main() {
 
 ### Readable at a glance
 
-- Clean language frames
+- Copyable code frames
 - Automatic language detection
 - Safe plain-text fallback`;
 

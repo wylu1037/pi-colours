@@ -1,17 +1,17 @@
 {
   "name": "pi-colours",
-  "version": "0.1.0",
-  "description": "Compact rich Markdown and active-theme syntax highlighting for Pi",
+  "version": "0.2.0",
+  "description": "Compact rich Markdown, copyable code frames, and active-theme syntax highlighting for Pi",
   "type": "module",
   "license": "MIT",
   "author": "Kevin Pita",
-  "homepage": "https://github.com/kevinpita/pi-colours#readme",
+  "homepage": "https://github.com/wylu1037/pi-colours#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kevinpita/pi-colours.git"
+    "url": "git+https://github.com/wylu1037/pi-colours.git"
   },
   "bugs": {
-    "url": "https://github.com/kevinpita/pi-colours/issues"
+    "url": "https://github.com/wylu1037/pi-colours/issues"
   },
   "publishConfig": {
     "access": "public"
@@ -36,10 +36,12 @@
     "extensions": [
       "./extensions/pi-colours.ts"
     ],
-    "image": "https://raw.githubusercontent.com/kevinpita/pi-colours/main/docs/assets/pi-colours-dark.png"
+    "image": "https://raw.githubusercontent.com/wylu1037/pi-colours/main/docs/assets/pi-colours-dark.png"
   },
   "scripts": {
     "check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "screenshots": "vite-node scripts/render-screenshots.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -49,10 +51,18 @@
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
   },
+  "overrides": {
+    "@earendil-works/chord": "1.1.0",
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-codemode": "1.1.0",
+    "@earendil-works/pi-mcp": "1.1.0"
+  },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.83.0",
-    "@earendil-works/pi-tui": "0.83.0",
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "@earendil-works/pi-tui": "1.1.0",
     "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   },

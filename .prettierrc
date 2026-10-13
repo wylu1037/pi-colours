@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "useTabs": true,
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": [
+        "*.json",
+        "*.json5",
+        "*.jsonc",
+        "*.yaml",
+        "*.yml",
+        ".prettierrc"
+      ],
+      "options": {
+        "useTabs": false
+      }
+    },
+    {
+      "files": ["*.md"],
+      "options": {
+        "useTabs": false
+      }
+    }
+  ]
+}

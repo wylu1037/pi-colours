@@ -1,6 +1,8 @@
 import {
+	copyToClipboard,
 	getMarkdownTheme,
 	type ExtensionAPI,
+	type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import {
 	Container,
@@ -10,6 +12,11 @@ import {
 	Text,
 } from "@earendil-works/pi-tui";
 import { registerHighlightedBashTool } from "../src/bash-tool.ts";
+import {
+	clearLatestCopyTarget,
+	copyDescription,
+	getLatestCopyTarget,
+} from "../src/copy.ts";
 import { installMarkdownPatch } from "../src/markdown-patch.ts";
 
 export const PREVIEW_MARKDOWN = `# Compact rich Markdown
@@ -51,14 +58,52 @@ func main() {
 > The active Pi theme supplies every color.
 
 - Compact headings
-- Clean code frames
+- Copyable code frames
 - Safe plain-text fallback`;
 
 export default function piColours(pi: ExtensionAPI): void {
-	const markdownPatch = installMarkdownPatch();
-	registerHighlightedBashTool(pi);
+	let notify:
+		| ((message: string, type?: "info" | "warning" | "error") => void)
+		| undefined;
+
+	const copyCode = (code: string, label: string): void => {
+		copyToClipboard(code)
+			.then(() => {
+				notify?.(
+					`Copied ${copyDescription(label, code)} to the clipboard`,
+					"info",
+				);
+			})
+			.catch((error: unknown) => {
+				const message = error instanceof Error ? error.message : String(error);
+				notify?.(`Copy failed: ${message}`, "error");
+			});
+	};
+
+	const copyLatest = async (ctx: ExtensionContext): Promise<void> => {
+		const target = getLatestCopyTarget();
+		if (!target) {
+			ctx.ui.notify("No code block to copy yet.", "warning");
+			return;
+		}
+		try {
+			await copyToClipboard(target.code);
+			ctx.ui.notify(
+				`Copied ${copyDescription(target.label, target.code)} to the clipboard`,
+				"info",
+			);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			ctx.ui.notify(`Copy failed: ${message}`, "error");
+		}
+	};
+
+	const markdownPatch = installMarkdownPatch({ onCopy: copyCode });
+	registerHighlightedBashTool(pi, { onCopy: copyCode });
 
 	pi.on("session_start", (_event, ctx) => {
+		notify = (message, type) => ctx.ui.notify(message, type);
+		clearLatestCopyTarget();
 		if (ctx.mode === "tui" && !markdownPatch.installed) {
 			ctx.ui.notify(
 				markdownPatch.reason ??
@@ -70,6 +115,18 @@ export default function piColours(pi: ExtensionAPI): void {
 
 	pi.on("session_shutdown", () => {
 		markdownPatch.restore();
+		clearLatestCopyTarget();
+		notify = undefined;
+	});
+
+	pi.registerShortcut("ctrl+shift+c", {
+		description: "Copy the latest code block",
+		handler: (ctx) => copyLatest(ctx),
+	});
+
+	pi.registerCommand("colours-copy", {
+		description: "Copy the latest code block to the clipboard",
+		handler: (_args, ctx) => copyLatest(ctx),
 	});
 
 	pi.registerCommand("colours-preview", {
@@ -94,6 +151,7 @@ export default function piColours(pi: ExtensionAPI): void {
 				return {
 					render: (width) => container.render(width),
 					invalidate: () => container.invalidate(),
+					handleMouse: (event) => container.handleMouse(event),
 					handleInput: (data) => {
 						if (matchesKey(data, Key.enter) || matchesKey(data, Key.escape))
 							done();
