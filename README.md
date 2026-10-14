@@ -13,7 +13,7 @@
 
 Pi Colours makes assistant messages, user Markdown, code blocks, and source-like Bash results easier to scan. It uses the active Pi theme. It does not force a dark or light palette.
 
-Every code block renders in a rounded frame with a language label and a `[Copy]` chip, so you can copy a block with one click.
+Every code block renders in a rounded frame with a language label and a `[Copy]` chip, so you can copy a block with one click. A successful copy turns the chip into `[Copied]` for three seconds.
 
 ## Preview
 
@@ -61,7 +61,7 @@ Copy a block in three ways:
 | `/colours-copy` | The most recent code block in the conversation.                          |
 | `ctrl+shift+c`  | The same as `/colours-copy`, in terminals that report the Shift key.     |
 
-Pi confirms each copy with a short notification that includes the language and line count.
+Pi confirms each copy with a short notification that includes the language and line count. The chip you clicked also switches to `[Copied]` for three seconds, so you can tell which block you copied.
 
 Clicking needs fullscreen TUI mode, which is the default. In `regular` mode the frames still render; use the command or the shortcut to copy. The `ctrl+shift+c` shortcut needs a terminal with extended key reporting, such as Kitty, WezTerm, or Ghostty; in other terminals use `/colours-copy`.
 

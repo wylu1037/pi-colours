@@ -184,6 +184,37 @@ describe("highlighted Bash renderer", () => {
 		expect(onCopy).toHaveBeenCalledWith(fullOutput, "typescript");
 	});
 
+	it("confirms the copy on the clicked frame and restores [Copy] later", async () => {
+		vi.useFakeTimers();
+		try {
+			onCopy = vi.fn().mockResolvedValue(undefined);
+			const component = renderComponent("cat src/example.ts", "line one");
+			const lines = component.render(100).map(stripAnsi);
+
+			clickCopy(component, lines);
+			await Promise.resolve();
+			await Promise.resolve();
+
+			const copied = component.render(100).map(stripAnsi);
+			expect(copied.some((line) => line.includes("[Copied]"))).toBe(true);
+
+			vi.advanceTimersByTime(2000);
+			expect(
+				component
+					.render(100)
+					.map(stripAnsi)
+					.some((line) => line.includes("[Copied]")),
+			).toBe(true);
+
+			vi.advanceTimersByTime(1500);
+			const restored = component.render(100).map(stripAnsi);
+			expect(restored.some((line) => line.includes("[Copied]"))).toBe(false);
+			expect(restored.some((line) => line.includes("[Copy]"))).toBe(true);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("registers the latest output for the copy shortcut", () => {
 		renderComponent("cat src/example.ts", "const answer = 42;");
 

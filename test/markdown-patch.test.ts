@@ -219,6 +219,38 @@ describe("Markdown patch", () => {
 		expect(onCopy).not.toHaveBeenCalled();
 	});
 
+	it("confirms the copy on the clicked frame and restores [Copy] later", async () => {
+		vi.useFakeTimers();
+		try {
+			const onCopy = vi.fn().mockResolvedValue(undefined);
+			patch = installMarkdownPatch({ onCopy });
+			const md = createMarkdown("```ts\nconst answer = 42;\n```");
+			const lines = md.render(100);
+			const row = copyRows(lines)[0]!;
+			const columns = copyColumns(lines[row]!)!;
+			const x = columns.startX + 2;
+
+			md.handleMouse(mouseEvent({ type: "press", x, y: row }));
+			md.handleMouse(mouseEvent({ x, y: row }));
+			await Promise.resolve();
+			await Promise.resolve();
+
+			const copied = md.render(100).map(stripAnsi);
+			expect(copied.some((line) => line.includes("[Copied]"))).toBe(true);
+
+			vi.advanceTimersByTime(2000);
+			const stillCopied = md.render(100).map(stripAnsi);
+			expect(stillCopied.some((line) => line.includes("[Copied]"))).toBe(true);
+
+			vi.advanceTimersByTime(1500);
+			const restored = md.render(100).map(stripAnsi);
+			expect(restored.some((line) => line.includes("[Copied]"))).toBe(false);
+			expect(copyRows(restored)).toHaveLength(1);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("tracks the latest block in the copy registry", () => {
 		patch = installMarkdownPatch();
 		const md = createMarkdown(

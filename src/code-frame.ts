@@ -19,7 +19,13 @@ export interface CodeFrame {
 	copy?: CodeFrameCopyLabel | undefined;
 }
 
+export interface CodeFrameOptions {
+	/** Render the chip as "[Copied]" to confirm a successful copy. */
+	copied?: boolean;
+}
+
 const COPY_LABEL = "[Copy]";
+const COPIED_LABEL = "[Copied]";
 const TOP_PREFIX = "╭─ ";
 const TOP_SUFFIX = "─╮";
 const BOTTOM_SUFFIX = "╯";
@@ -49,10 +55,12 @@ export function buildCodeFrame(
 	contentLines: readonly string[],
 	width: number,
 	border: (text: string) => string = (text) => text,
+	options: CodeFrameOptions = {},
 ): CodeFrame | undefined {
+	const chip = options.copied ? COPIED_LABEL : COPY_LABEL;
 	const prefix = `${TOP_PREFIX}${label} `;
 	const prefixWidth = visibleWidth(prefix);
-	const chipWidth = COPY_LABEL.length + 2; // " [Copy] "
+	const chipWidth = chip.length + 2; // " [Copy] "
 	const withLabel = width - prefixWidth - chipWidth - 2 >= 1;
 	const withoutLabel = width - prefixWidth - 2 >= 1;
 	if (!withLabel && !withoutLabel) return undefined;
@@ -61,14 +69,14 @@ export function buildCodeFrame(
 		? width - prefixWidth - chipWidth - 2
 		: width - prefixWidth - 2;
 	const top = withLabel
-		? `${prefix}${"─".repeat(fillWidth)} ${COPY_LABEL} ${TOP_SUFFIX}`
+		? `${prefix}${"─".repeat(fillWidth)} ${chip} ${TOP_SUFFIX}`
 		: `${prefix}${"─".repeat(fillWidth)}${TOP_SUFFIX}`;
 
 	let copy: CodeFrameCopyLabel | undefined;
 	if (withLabel) {
-		const index = top.indexOf(COPY_LABEL);
+		const index = top.indexOf(chip);
 		const startX = visibleWidth(top.slice(0, index));
-		copy = { row: 0, startX, endX: startX + COPY_LABEL.length - 1 };
+		copy = { row: 0, startX, endX: startX + chip.length - 1 };
 	}
 
 	const innerWidth = width - 4;

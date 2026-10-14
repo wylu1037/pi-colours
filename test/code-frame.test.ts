@@ -58,6 +58,17 @@ describe("buildCodeFrame", () => {
 		expect(visibleWidth(frame!.lines[0]!)).toBe(40);
 	});
 
+	it("renders the copied chip and keeps its geometry", () => {
+		const frame = buildCodeFrame("bash", ["echo hi"], 40, undefined, {
+			copied: true,
+		});
+		expect(frame).toBeDefined();
+		const lines = frame!.lines.map(stripAnsi);
+		expect(lines[0]).toBe(`╭─ bash ${"─".repeat(20)} [Copied] ─╮`);
+		expect(frame!.copy).toEqual({ row: 0, startX: 29, endX: 36 });
+		for (const line of frame!.lines) expect(visibleWidth(line)).toBe(40);
+	});
+
 	it("removes ANSI sequences", () => {
 		expect(stripAnsi("\x1b[31mred\x1b[0m")).toBe("red");
 	});

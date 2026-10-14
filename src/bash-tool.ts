@@ -13,12 +13,16 @@ import type {
 import { buildCodeFrame } from "./code-frame.ts";
 import { setLatestCopyTarget } from "./copy.ts";
 import { inferLanguageFromCommand, resolveLanguage } from "./languages.ts";
+import { requestRepaint } from "./repaint.ts";
 
 const PREVIEW_LINES = 5;
 
+/** How long the chip shows "[Copied]" after a successful copy. */
+const COPY_FEEDBACK_MS = 3000;
+
 export interface BashToolOptions {
 	/** Called when the user activates the "[Copy]" label on a Bash code frame. */
-	onCopy?: (code: string, label: string) => void;
+	onCopy?: (code: string, label: string) => void | Promise<void>;
 }
 
 interface BashFrameContent {
@@ -45,13 +49,19 @@ class FramedBashOutput implements Component {
 		notes: [],
 		border: (text) => text,
 	};
-	private cache: { width: number; lines: string[] } | undefined;
+	private cache:
+		{ width: number; copied: boolean; lines: string[] } | undefined;
+	private copiedUntil: number | undefined;
+	private copyTimer: ReturnType<typeof setTimeout> | undefined;
 	private copyHit:
 		| { row: number; startX: number; endX: number; code: string; label: string }
 		| undefined;
 
 	constructor(
-		private readonly onCopy?: (code: string, label: string) => void,
+		private readonly onCopy?: (
+			code: string,
+			label: string,
+		) => void | Promise<void>,
 	) {}
 
 	setContent(content: BashFrameContent): void {
@@ -63,8 +73,31 @@ class FramedBashOutput implements Component {
 		this.cache = undefined;
 	}
 
+	private isCopied(): boolean {
+		return this.copiedUntil !== undefined && Date.now() < this.copiedUntil;
+	}
+
+	private markCopied(): void {
+		this.copiedUntil = Date.now() + COPY_FEEDBACK_MS;
+		this.cache = undefined;
+		requestRepaint();
+		if (this.copyTimer !== undefined) clearTimeout(this.copyTimer);
+		this.copyTimer = setTimeout(() => {
+			this.copyTimer = undefined;
+			this.copiedUntil = undefined;
+			this.cache = undefined;
+			requestRepaint();
+		}, COPY_FEEDBACK_MS);
+	}
+
 	render(width: number): string[] {
-		if (this.cache && this.cache.width === width) return this.cache.lines;
+		const copied = this.isCopied();
+		if (
+			this.cache &&
+			this.cache.width === width &&
+			this.cache.copied === copied
+		)
+			return this.cache.lines;
 		const lines: string[] = [];
 		this.copyHit = undefined;
 		const content = this.content;
@@ -82,6 +115,7 @@ class FramedBashOutput implements Component {
 						content.codeLines,
 						width,
 						content.border,
+						{ copied },
 					)
 				: undefined;
 		if (frame) {
@@ -100,7 +134,7 @@ class FramedBashOutput implements Component {
 			lines.push(...content.codeLines);
 		}
 		lines.push(...content.notes);
-		this.cache = { width, lines };
+		this.cache = { width, copied, lines };
 		return lines;
 	}
 
@@ -113,7 +147,12 @@ class FramedBashOutput implements Component {
 		if (!hit) return undefined;
 		if (event.y !== hit.row || event.x < hit.startX || event.x > hit.endX)
 			return undefined;
-		if (event.type === "click") this.onCopy?.(hit.code, hit.label);
+		if (event.type === "click") {
+			void Promise.resolve(this.onCopy?.(hit.code, hit.label)).then(
+				() => this.markCopied(),
+				() => {},
+			);
+		}
 		return { handled: true };
 	}
 }
